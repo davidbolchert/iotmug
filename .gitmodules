@@ -1,0 +1,6 @@
+[submodule "iotmug-client"]
+	path = iotmug-client
+	url = https://github.com/davidbolchert/iotmug-client.git
+[submodule "iotmug-server"]
+	path = iotmug-server
+	url = https://github.com/davidbolchert/iotmug-server.git
