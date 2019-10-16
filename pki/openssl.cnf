@@ -1,0 +1,86 @@
+[ ca ]
+default_ca      = root_ca
+
+[ root_ca ]
+dir             = .
+certs           = $dir/certs
+new_certs_dir   = $dir/newcerts
+database        = $dir/index.txt
+certificate     = $dir/certs/root_ca.pem
+serial          = $dir/serial
+private_key     = $dir/private/root_ca.key
+default_days    = 3650
+default_md      = sha256
+preserve        = no
+policy          = policy_match
+
+[ intermediate_ca ]
+dir             = ./_intermediate
+certs           = $dir/certs  
+new_certs_dir   = $dir/newcerts
+database        = $dir/index.txt
+certificate     = $dir/intermediate_ca.pem 
+serial          = $dir/serial
+private_key     = $dir/private/intermediate_ca.key
+default_days    = 3650
+default_md      = sha256
+preserve        = no  
+policy          = policy_match
+
+[ policy_match ]
+countryName             = match
+stateOrProvinceName     = match
+localityName		    = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ policy_anything ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits            = 4096
+distinguished_name      = req_distinguished_name
+
+[ req_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_default             = FR
+countryName_min                 = 2
+countryName_max                 = 2
+stateOrProvinceName             = State or Province Name (full name)
+stateOrProvinceName_default     = Alsace
+localityName                    = Locality Name (eg, city)
+localityName_default            = Strasbourg
+0.organizationName              = Organization Name (eg, company)
+0.organizationName_default      = MUG
+organizationalUnitName          = Organizational Unit Name (eg, section)
+#organizationalUnitName_default = IOT
+commonName                      = Common Name (eg, YOUR name)
+commonName_max                  = 64
+
+[ req_attributes ]
+challengePassword               = A challenge password
+challengePassword_min           = 4
+challengePassword_max           = 20
+
+[ROOT_CA]
+nsComment                       = "ROOT CA"
+subjectKeyIdentifier            = hash
+authorityKeyIdentifier          = keyid,issuer:always
+basicConstraints                = critical,CA:TRUE,pathlen:1
+keyUsage                        = keyCertSign, cRLSign
+
+[INTERMEDIATE_CA]
+nsComment                       = "GROUP CA"
+basicConstraints                = critical,CA:TRUE,pathlen:0
+subjectKeyIdentifier            = hash
+authorityKeyIdentifier          = keyid,issuer:always
+issuerAltName                   = issuer:copy
+keyUsage                        = keyCertSign, cRLSign
