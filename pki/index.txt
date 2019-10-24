@@ -1,1 +1,2 @@
 V	291013223349Z		1000	unknown	/C=FR/ST=Alsace/L=Strasbourg/O=MUG/CN=Intermediate
+V	291020224732Z		1001	unknown	/C=FR/ST=Alsace/L=Strasbourg/O=MUG/CN=MugIntermediate

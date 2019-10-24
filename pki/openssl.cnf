@@ -74,12 +74,12 @@ challengePassword_max           = 20
 nsComment                       = "ROOT CA"
 subjectKeyIdentifier            = hash
 authorityKeyIdentifier          = keyid,issuer:always
-basicConstraints                = critical,CA:TRUE,pathlen:1
+basicConstraints                = critical,CA:TRUE,pathlen:12
 keyUsage                        = keyCertSign, cRLSign
 
 [INTERMEDIATE_CA]
 nsComment                       = "GROUP CA"
-basicConstraints                = critical,CA:TRUE,pathlen:0
+basicConstraints                = critical,CA:TRUE,pathlen:6
 subjectKeyIdentifier            = hash
 authorityKeyIdentifier          = keyid,issuer:always
 issuerAltName                   = issuer:copy
