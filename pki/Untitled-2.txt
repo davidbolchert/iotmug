@@ -1,0 +1,67 @@
+# IIT ROOT CA (CN = iit.hagergroup.com)
+mkdir certs crl newcerts private
+copy /b NUL index.txt
+copy /b NUL rand
+echo unique_subject = yes > index.txt.attr
+echo 1000 > serial
+echo 1000 > crlnumber
+_# Create openssl.cnf #_
+
+openssl genrsa -aes256 -out private/root.key 4096
+_password_
+openssl req -config openssl.cnf -key private/root.key -new -x509 -days 3650 -sha256 -extensions v3_ca -out certs/root.crt
+
+openssl pkcs12 -export -out certs/root.pfx -inkey private/root.key -in certs/root.crt
+
+mkdir verification
+cd verification
+openssl genrsa -out verification.key 2048
+openssl req -config ../openssl.cnf -new -sha256 -key verification.key -out verification.csr
+openssl x509 -req -in verification.csr -CA ../certs/intermediate.crt -CAkey ../private/intermediate.key -CAcreateserial -out verification.crt -days 3000 -sha256
+_Transform in cer_
+
+# IOT ROOT INTERMEDIATE CA (CN = devicesiot.iit.hagergroup.com)
+mkdir _intermediate
+cd _intermediate
+mkdir certs crl csr newcerts private
+copy /b NUL index.txt
+copy /b NUL rand
+echo unique_subject = yes > index.txt.attr
+echo 1000 > serial
+echo 1000 > crlnumber
+_# Create openssl.cnf #_
+cd ..
+
+openssl genrsa -aes256 -out _intermediate/private/intermediate.key 2048
+_password_ `Iot2910.`
+openssl req -config _intermediate/openssl.cnf -new -sha256 -key _intermediate/private/intermediate.key -out _intermediate/csr/intermediate.csr
+openssl ca -config openssl.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in _intermediate/csr/intermediate.csr -out _intermediate/certs/intermediate.crt
+_Transform in cer_
+
+openssl pkcs12 -export -out _intermediate/certs/intermediate.pfx -inkey _intermediate/private/intermediate.key -in _intermediate/certs/intermediate.crt
+_password_ 
+
+mkdir verification
+cd verification
+openssl genrsa -out verification.key 2048
+openssl req -config ../openssl.cnf -new -sha256 -key verification.key -out verification.csr
+openssl x509 -req -in verification.csr -CA ../certs/root.crt -CAkey ../private/root.key -CAcreateserial -out verification.crt -days 3000 -sha256
+_Transform in cer_
+
+cd ..
+
+# CHILDREN Root
+openssl req -nodes -new -sha256 -config openssl.cnf -subj "//CN=test" -keyout _children/test.key -out _children/test.csr -newkey rsa:2048
+openssl ca -batch -notext -md sha256 -extensions v3_user_client -days 365 -config openssl.cnf -keyfile private/root.key -in _children/test.csr -out _children/test.crt
+openssl pkcs12 -export -out _children/test.pfx -inkey _children/test.key -in _children/test.crt -password pass:1234
+
+
+# CHILDREN INTERMEDIATE
+cd _intermediate
+openssl req -nodes -new -sha256 -config openssl.cnf -subj "//CN=test2" -keyout _children/test.key -out _children/test.csr -newkey rsa:2048
+openssl ca -batch -notext -md sha256 -extensions v3_user_client -days 365 -config openssl.cnf -keyfile private/intermediate.key -in _children/test.csr -out _children/test.crt
+
+cd _children
+
+openssl pkcs12 -export -out _children/test.pfx -inkey _children/test.key -in _children/test.crt -password pass:1234
+

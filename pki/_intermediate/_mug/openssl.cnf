@@ -1,0 +1,176 @@
+#====================================================================
+             ##----- Establish Build Variables -----##
+#====================================================================
+dir                             = .
+CNF                             = $dir/openssl.cnf
+
+#====================================================================
+           ##----- Establish CA Profile and Policy -----##
+#====================================================================
+[ ca ]
+default_ca                      = CA_default
+
+#====================================================================
+
+[ CA_default ]
+certs                           = $dir/certs
+new_certs_dir                   = $dir/newcerts
+
+database                        = $dir/index.txt
+unique_subject                  = yes
+RANDFILE                        = $dir/rand
+serial                          = $dir/serial
+
+crldir                          = $dir/crl
+crlnumber                       = crlnumber
+crl                             = $crldir/mug.crl
+default_crl_days                = 3650
+
+certificate                     = $dir/certs/mug.crt
+private_key                     = $dir/private/mug.key
+
+default_days                    = 3650
+preserve                        = no
+default_md                      = sha512
+
+policy                          = policy_match
+name_opt                        = ca_default
+cert_opt                        = ca_default
+email_in_dn                     = no
+
+x509_extensions                 = v3_user_client
+#====================================================================
+
+[ policy_match ]
+countryName                     = optional
+stateOrProvinceName             = optional
+organizationName                = optional
+organizationalUnitName          = optional
+commonName                      = supplied
+
+[ policy_supply ]
+countryName                     = match
+stateOrProvinceName             = match
+organizationName                = match
+organizationalUnitName          = match
+commonName                      = optional
+
+#====================================================================
+            ##----- Establish Certificate Options -----#
+#--------------------------------------------------------------------
+
+  # x64 machines process SHA512 more efficiently than SHA256
+
+[ req ]
+default_bits                    = 2048
+preserve                        = no
+default_md                      = sha512
+
+string_mask                     = utf8only
+utf8                            = yes
+distinguished_name              = req_distinguished_name
+req_extensions                  = v3_req
+x509_extensions                 = v3_ca
+
+#====================================================================
+
+[ req_distinguished_name ]
+
+countryName                     = Country
+countryName_max                 = 2
+stateOrProvinceName             = State
+organizationName                = Organization
+organizationalUnitName          = Organizational Unit
+commonName                      = Common Name
+commonName_max                  = 64
+
+countryName_default             = FR
+stateOrProvinceName_default     = Strasbourg
+organizationName_default        = MUG
+organizationalUnitName_default  = IOT
+
+#--------------------------------------------------------------------
+               ##----- Certificate Authorities -----##
+#--------------------------------------------------------------------
+# Main #
+  [ alt_ca_main ]
+  DNS.1                 = ${req_distinguished_name::commonName}
+
+# General #
+  [ alt_general ]
+  DNS.1                 = ${req_distinguished_name::commonName}
+
+# Code Signing #
+  [ alt_codesign ]
+  DNS.1                 = Code-Signing
+
+#====================================================================
+     ##----- Establish Certificate Authority V3 Profiles -----##
+#--------------------------------------------------------------------
+
+  # These V3 CA profiles must not be modified to contain any more, or any less, KUs
+  # These have been configured specifically for security & its imperative no other keyUsages are set
+    # For an ICA to be capable of signing additional CAs/ICAs, pathlen number must mirror number of CAs/ICAs it can sign
+    # By default, all ICAs are set to 0, meaning they can sign certs, but not other CAs/ICAs.
+
+
+[ v3_ca ]
+basicConstraints            = critical, CA:TRUE
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always, issuer:always
+subjectAltName              = @alt_ca_main
+keyUsage                    = critical, cRLSign, digitalSignature, keyCertSign
+
+[ v3_mug_ca ]
+basicConstraints            = critical, CA:TRUE, pathlen:12
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always, issuer:always
+subjectAltName              = @alt_general
+keyUsage                    = critical, cRLSign, digitalSignature, keyCertSign, nonRepudiation, keyEncipherment
+
+[ v3_signing_ica ]
+basicConstraints            = critical, CA:TRUE, pathlen:0
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always, issuer:always
+keyUsage                    = critical, cRLSign, digitalSignature, keyCertSign
+subjectAltName              = @alt_codesign
+
+[ crl_ext ]
+issuerAltName               = issuer:copy
+authorityKeyIdentifier      = keyid:always, issuer:always
+
+#--------------------------------------------------------------------
+            ##----- Certificate Authority Clients -----##
+#--------------------------------------------------------------------
+
+[ v3_req ]
+subjectAltName              = @alt_general
+subjectKeyIdentifier        = hash
+
+# Servers #
+[ v3_server_client ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always, issuer:always
+keyUsage                    = critical, nonRepudiation, digitalSignature, keyEncipherment, keyAgreement
+extendedKeyUsage            = critical, serverAuth
+subjectAltName              = @alt_general
+
+# Users #
+[ v3_user_client ]
+basicConstraints            = CA:FALSE
+nsCertType                  = client, email
+nsComment                   = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid,issuer
+keyUsage                    = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage            = clientAuth, emailProtection
+
+# Code Signing #
+[ v3_codesign ]
+basicConstraints            = critical, CA:FALSE
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always, issuer:always
+keyUsage                    = critical, nonRepudiation, digitalSignature
+extendedKeyUsage            = critical, codeSigning, msCodeInd, msCodeCom, timeStamping
+subjectAltName              = @alt_codesign
