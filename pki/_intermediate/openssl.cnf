@@ -23,11 +23,11 @@ serial                          = $dir/serial
 
 crldir                          = $dir/crl
 crlnumber                       = crlnumber
-crl                             = $crldir/root.crl
+crl                             = $crldir/intermediate.crl
 default_crl_days                = 3650
 
-certificate                     = $dir/certs/root.crt
-private_key                     = $dir/private/root.key
+certificate                     = $dir/certs/intermediate.crt
+private_key                     = $dir/private/intermediate.key
 
 default_days                    = 3650
 preserve                        = no
